@@ -3,7 +3,7 @@
  * Plugin Name: Fat Rat Collect
  * Plugin URI: https://www.fatrat.cn
  * Description: 胖鼠采集(Fat Rat Collect) 是一款可以帮助你批量采集文章数据的开源插件，采集含括微信采集、简书采集、知乎采集、列表采集、详情采集。完美支持自动采集、自动发布文章。图片本地化、关键字替换、自动标签、动态内容、等其他黑科技。是您建站好帮手！如果你还会一点Html JQuery知识。那就太棒了。
- * Version: 2.4.3
+ * Version: 2.5.2
  * Author: Fat Rat
  * Author URI: https://www.fatrat.cn/about
  * Disclaimer: Use at your own risk. No warranty expressed or implied is provided.
@@ -17,7 +17,7 @@ if (!defined('WPINC')) {
 }
 
 global $frc_db_version;
-$frc_db_version = '2.4.3';
+$frc_db_version = '2.5.2';
 
 /**
  * Fire up Composer's autoloader
@@ -159,15 +159,15 @@ function frc_loading_assets( $hook ) {
 
     if (in_array(strstr($hook,"frc-"), $allowed_pages)) {
         // css
-        wp_register_style('fat-rat-bootstrap-css', plugins_url('css/bootstrap.min.css', __FILE__));
+        wp_register_style('fat-rat-bootstrap-css', plugins_url('public/css/bootstrap.min.css', __FILE__));
         wp_enqueue_style('fat-rat-bootstrap-css');
-        wp_register_style('fat-rat-css', plugins_url('css/fatrat.css', __FILE__));
+        wp_register_style('fat-rat-css', plugins_url('public/css/fatrat.css', __FILE__));
         wp_enqueue_style('fat-rat-css');
 
         // js
-        wp_register_script('fat-rat-bootstrap-js', plugins_url('js/bootstrap.min.js', __FILE__));
+        wp_register_script('fat-rat-bootstrap-js', plugins_url('public/js/bootstrap.min.js', __FILE__));
         wp_enqueue_script('fat-rat-bootstrap-js');
-        wp_register_script('fat-rat-js', plugins_url('js/fatrat.js', __FILE__), array('jquery'), $frc_db_version, true);
+        wp_register_script('fat-rat-js', plugins_url('public/js/fatrat.js', __FILE__), array('jquery'), $frc_db_version, true);
         wp_enqueue_script('fat-rat-js');
     }
 }
@@ -292,13 +292,13 @@ add_action( 'wp_ajax_frc_interface', function (){
         wp_send_json(['code' => 5003, 'msg' => '鼠友你好, 胖鼠采集目前要求php版本 > 7.1, 检测到你当前PHP版本为'.phpversion().'. 建议升级php版本, 或者请去胖鼠采集的Github下载使用胖鼠v5.6版本 分支名: based_php_5.6!']);
         wp_die();
     }
-    $interface_type = !empty($_REQUEST['interface_type']) ? sanitize_text_field($_REQUEST['interface_type']) : null;
+    $interface_type = frc_sanitize_text('interface_type', null);
     if (empty($interface_type)){
         wp_send_json(['code' => 5004, 'msg' => 'interface type not found error!']);
         wp_die();
     }
 
-    $action_func = !empty($_REQUEST['action_func']) ? sanitize_text_field($_REQUEST['action_func']) : '';
+    $action_func = frc_sanitize_text('action_func');
     if (empty($action_func)){
         wp_send_json(['code' => 5001, 'msg' => 'Parameter error!']);
         wp_die();

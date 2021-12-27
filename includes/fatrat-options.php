@@ -43,8 +43,8 @@ class FRC_Options
         }
 
         if (!empty($_REQUEST['orderby'])) {
-            $sql .= ' ORDER BY ' . esc_sql($_REQUEST['orderby']);
-            $sql .= !empty($_REQUEST['order']) ? ' ' . esc_sql($_REQUEST['order']) : ' ASC';
+            $sql .= ' ORDER BY ' . frc_sanitize_text('orderby');
+            $sql .= !empty($_REQUEST['order']) ? ' ' . frc_sanitize_text('order') : ' ASC';
         } else {
             $sql .= ' ORDER BY id DESC';
         }
@@ -162,25 +162,25 @@ class FRC_Options
             }
         }
 
-        $option_id                  = !empty($_REQUEST['option_id']) ? sanitize_text_field($_REQUEST['option_id']) : null;
-        $collect_name               = !empty($_REQUEST['collect_name']) ? sanitize_text_field($_REQUEST['collect_name']) : '';
-        $collect_describe           = !empty($_REQUEST['collect_describe']) ? sanitize_text_field($_REQUEST['collect_describe']) : '胖鼠采集, Wordpress最好用的采集神器.';
-        $collect_type               = !empty($_REQUEST['collect_type']) ? sanitize_text_field($_REQUEST['collect_type']) : 'list';
-        $collect_rendering          = !empty($_REQUEST['collect_rendering']) ? (int)sanitize_text_field($_REQUEST['collect_rendering']) : 1;
-        $collect_image_download     = !empty($_REQUEST['collect_image_download']) ? (int)sanitize_text_field($_REQUEST['collect_image_download']) : 1;
-        $collect_image_path         = !empty($_REQUEST['collect_image_path']) ? (int)sanitize_text_field($_REQUEST['collect_image_path']) : 1;
-        $collect_remove_head        = !empty($_REQUEST['collect_remove_head']) ? (int)sanitize_text_field($_REQUEST['collect_remove_head']) : 1;
-        $collect_list_url           = !empty($_REQUEST['collect_list_url']) ? sanitize_text_field( $_REQUEST['collect_list_url'] ) : '';
-        $collect_list_url_paging    = !empty($_REQUEST['collect_list_url_paging']) ? sanitize_text_field( $_REQUEST['collect_list_url_paging'] ) : '';
-        $collect_list_range         = !empty($_REQUEST['collect_list_range']) ? sanitize_text_field($_REQUEST['collect_list_range']) : '';
-        $collect_list_rules         = !empty($_REQUEST['collect_list_rules']) ? sanitize_text_field($_REQUEST['collect_list_rules'])  : '';
-        $collect_content_range      = !empty($_REQUEST['collect_content_range']) ? sanitize_text_field($_REQUEST['collect_content_range']) : '';
-        $collect_content_rules      = !empty($_REQUEST['collect_content_rules']) ? sanitize_text_field($_REQUEST['collect_content_rules']) : '';
-        $collect_image_attribute      = !empty($_REQUEST['collect_image_attribute']) ? sanitize_text_field($_REQUEST['collect_image_attribute']) : 'src';
-        $collect_custom_content_head  = !empty($_REQUEST['collect_custom_content_head']) ? esc_html($_REQUEST['collect_custom_content_head']) : '';
-        $collect_custom_content_foot  = !empty($_REQUEST['collect_custom_content_foot']) ? esc_html($_REQUEST['collect_custom_content_foot']) : '';
-        $collect_keywords_replace_rule  = !empty($_REQUEST['collect_keywords_replace_rule']) ? sanitize_text_field($_REQUEST['collect_keywords_replace_rule']) : '';
-        $collect_keywords  = frc_sanitize_text('collect_keywords', '');
+        $option_id                  = frc_sanitize_text('option_id', null);
+        $collect_name               = frc_sanitize_text('collect_name');
+        $collect_describe           = frc_sanitize_text('collect_describe', '胖鼠采集, Wordpress最好用的采集神器.');
+        $collect_type               = frc_sanitize_text('collect_type', 'list');
+        $collect_rendering          = (int) frc_sanitize_text('collect_rendering', 1);
+        $collect_image_download     = (int) frc_sanitize_text('collect_image_download', 1);
+        $collect_image_path         = (int) frc_sanitize_text('collect_image_path', 1);
+        $collect_remove_head        = (int) frc_sanitize_text('collect_remove_head', 1);
+        $collect_list_url           = frc_sanitize_text('collect_list_url');
+        $collect_list_url_paging    = frc_sanitize_text('collect_list_url_paging');
+        $collect_list_range         = frc_sanitize_text('collect_list_range');
+        $collect_list_rules         = frc_sanitize_text('collect_list_rules');
+        $collect_content_range      = frc_sanitize_text('collect_content_range');
+        $collect_content_rules      = frc_sanitize_text('collect_content_rules');
+        $collect_image_attribute    = frc_sanitize_text('collect_image_attribute', 'src');
+        $collect_custom_content_head = frc_sanitize_textarea('collect_custom_content_head');
+        $collect_custom_content_foot = frc_sanitize_textarea('collect_custom_content_foot');
+        $collect_keywords_replace_rule = frc_sanitize_text('collect_keywords_replace_rule');
+        $collect_keywords = frc_sanitize_textarea('collect_keywords', '');
 
         if ($collect_name == ''){
             return ['code' => FRC_ApiError::FAIL, 'msg' => '给你的配置写个名字吧, 着啥急'];
@@ -196,8 +196,12 @@ class FRC_Options
         if (empty($collect_content_range) || empty($collect_content_rules)){
             return ['code' => FRC_ApiError::FAIL, 'msg' => '详情采集范围/采集规则为空.'];
         }
-        if ($collect_keywords != '' && !json_decode($collect_keywords)){
-            return ['code' => FRC_ApiError::FAIL, 'msg' => '关键词随机插入Json错误'];
+
+        if ($collect_keywords != ''){
+            $collect_keywords = str_replace('\"', '"', htmlspecialchars_decode($collect_keywords, ENT_QUOTES));
+            if (!json_decode($collect_keywords)){
+                return ['code' => FRC_ApiError::FAIL, 'msg' => '关键词随机插入Json错误'];
+            }
         }
 
         $params = [
@@ -210,7 +214,7 @@ class FRC_Options
             'collect_remove_head' => $collect_remove_head,
             'collect_list_url' => $collect_list_url,
             'collect_list_url_paging' => $collect_list_url_paging,
-            'collect_list_range' => str_replace("\\\\", "\\", $collect_list_range),
+            'collect_list_range' => $collect_list_range,
             'collect_list_rules' => $collect_list_rules,
             'collect_content_range' => $collect_content_range,
             'collect_content_rules' => $collect_content_rules,
@@ -760,7 +764,7 @@ class FRC_Configuration_List_Table extends WP_List_Table
         $sortable = $this->get_sortable_columns();
 
         //Retrieve $customvar for use in query to get items.
-        $customvar = (isset($_REQUEST['customvar']) ? sanitize_text_field($_REQUEST['customvar']) : 'total');
+        $customvar = frc_sanitize_text('customvar', 'total');
         $this->_column_headers = array($columns, $hidden, $sortable);
 
         /** Process bulk action */
@@ -781,7 +785,7 @@ class FRC_Configuration_List_Table extends WP_List_Table
     public function get_views()
     {
         $views = array();
-        $current = (!empty($_REQUEST['customvar']) ? sanitize_text_field($_REQUEST['customvar']) : 'total');
+        $current = frc_sanitize_text('customvar', 'total');
 
         $class = 'total' === $current ? ' class="current"' : '';
         $total_url = remove_query_arg('customvar');
@@ -833,15 +837,15 @@ function frc_options()
             <?php if (!empty(get_option(FRC_Validation::FRC_VALIDATION_SPONSORSHIP))) { ?>
                 <img width="20" src="<?php frc_image('fat-rat-nav-v-yellow.png') ?>" />
             <?php } ?>
-            <a href="<?php echo admin_url( 'admin.php?page=frc-options-add-edit' ) ?>" class="page-title-action"><?php esc_html_e( '新建采集配置', 'Fat Rat Collect' ) ?></a>
-            <a href="javascript:" class="page-title-action import_default_configuration"><?php esc_html_e( '演示例子', 'Fat Rat Collect' ) ?></a>
+            <a href="<?php esc_attr_e(admin_url( 'admin.php?page=frc-options-add-edit' )); ?>" class="page-title-action"><?php _e( '新建采集配置', 'Fat Rat Collect' ) ?></a>
+            <a href="javascript:" class="page-title-action import_default_configuration"><?php _e( '演示例子', 'Fat Rat Collect' ) ?></a>
         </h1>
-        <div><span style="color: #ff3d00;"><?php echo ((new FRC_Validation())->announcement('notice-options')); ?></span></div>
+        <div><span style="color: #ff3d00;"><?php _e(((new FRC_Validation())->announcement('notice-options'))); ?></span></div>
         <input type="hidden" hidden id="success_redirect_url"
-               value="<?php echo admin_url('admin.php?page=frc-options'); ?>">
+               value="<?php esc_attr_e(admin_url('admin.php?page=frc-options')); ?>">
 
         <form method="post">
-            <input type="hidden" hidden id="request_url" value="<?php echo admin_url('admin-ajax.php'); ?>">
+            <input type="hidden" hidden id="request_url" value="<?php esc_attr_e(admin_url('admin-ajax.php')); ?>">
             <?php
             $snippet_obj->prepare_items();
             $snippet_obj->display();

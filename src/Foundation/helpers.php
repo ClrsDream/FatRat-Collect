@@ -145,18 +145,29 @@ if (!function_exists("frc_sanitize_text")) {
      * Function to sanitize $_REQUEST data
      * @param $key
      * @param string $default
-     * @param bool $sanitize
      * @return array|mixed|string
      */
-    function frc_sanitize_text($key, $default = '', $sanitize = true)
+    function frc_sanitize_text($key, $default = '')
     {
-
         if (isset($_REQUEST[$key]) && !empty($_REQUEST[$key])) {
-            $out = stripslashes_deep($_REQUEST[$key]);
-            if ($sanitize) {
-                $out = sanitize_text_field($out);
-            }
-            return $out;
+            return sanitize_text_field($_REQUEST[$key]);
+        }
+
+        return $default;
+    }
+}
+
+if (!function_exists("frc_sanitize_textarea")) {
+    /**
+     * Function to sanitize $_REQUEST data
+     * @param $key
+     * @param string $default
+     * @return array|mixed|string
+     */
+    function frc_sanitize_textarea($key, $default = '')
+    {
+        if (isset($_REQUEST[$key]) && !empty($_REQUEST[$key])) {
+            return sanitize_textarea_field(htmlspecialchars($_REQUEST[$key]));
         }
 
         return $default;
@@ -173,24 +184,38 @@ if (!function_exists("frc_sanitize_array")) {
     function frc_sanitize_array( $key, $type = 'integer' ) {
         if ( isset($_REQUEST[ $key ]) && ! empty( $_REQUEST[ $key ] ) ) {
 
-            $arr = $_REQUEST[ $key ];
-
-            if ( ! is_array( $arr ) ) {
+            if ( ! is_array( $_REQUEST[ $key ] ) ) {
                 return [];
             }
 
             if ( 'integer' === $type ) {
-                return array_map( 'absint', $arr );
+                return array_map( 'absint', $_REQUEST[ $key ] );
             } else { // strings
-                $new_array = array();
-                foreach ( $arr as $val ) {
-                    $new_array[] = sanitize_text_field( $val );
+                $array = array();
+                foreach ( $_REQUEST[ $key ] as $val ) {
+                    $array[] = sanitize_text_field( $val );
                 }
+                return $array;
             }
-
-            return $new_array;
         }
 
         return [];
+    }
+}
+
+if (!function_exists("frc_option_esc_attr_e")) {
+    /**
+     * @param $option
+     * @param $key
+     * @param string $default
+     */
+    function frc_option_esc_attr_e($option, $key, $default = '')
+    {
+        if (isset($option) && isset($option[$key])) {
+            esc_attr_e($option[$key]);
+            return;
+        }
+
+        _e($default);
     }
 }
